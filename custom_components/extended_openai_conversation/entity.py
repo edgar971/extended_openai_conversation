@@ -34,7 +34,9 @@ from .const import (
     CONF_SERVICE_TIER,
     CONF_SHORTEN_TOOL_CALL_ID,
     CONF_TEMPERATURE,
+    CONF_TEMPERATURE_OVERRIDE,
     CONF_TOP_P,
+    CONF_TOP_P_OVERRIDE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_CONTEXT_THRESHOLD,
     DEFAULT_CONTEXT_TRUNCATE_STRATEGY,
@@ -44,12 +46,14 @@ from .const import (
     DEFAULT_SERVICE_TIER,
     DEFAULT_SHORTEN_TOOL_CALL_ID,
     DEFAULT_TEMPERATURE,
+    DEFAULT_TEMPERATURE_OVERRIDE,
     DEFAULT_TOP_P,
+    DEFAULT_TOP_P_OVERRIDE,
     DOMAIN,
 )
 from .exceptions import FunctionNotFound, ParseArgumentsFailed, TokenLengthExceededError
 from .functions import get_function
-from .helpers import get_model_config
+from .helpers import get_model_config, resolve_param_inclusion
 
 if TYPE_CHECKING:
     from . import ExtendedOpenAIConfigEntry
@@ -232,12 +236,18 @@ class ExtendedOpenAIBaseLLMEntity(Entity):
         elif model_config["supports_max_tokens"]:
             api_kwargs["max_tokens"] = max_tokens
 
-        # Add top_p if supported
-        if model_config["supports_top_p"]:
+        # Add top_p if supported (respecting user override)
+        top_p_override = options.get(CONF_TOP_P_OVERRIDE, DEFAULT_TOP_P_OVERRIDE)
+        if resolve_param_inclusion(model_config["supports_top_p"], top_p_override):
             api_kwargs["top_p"] = options.get(CONF_TOP_P, DEFAULT_TOP_P)
 
-        # Add temperature if supported
-        if model_config["supports_temperature"]:
+        # Add temperature if supported (respecting user override)
+        temperature_override = options.get(
+            CONF_TEMPERATURE_OVERRIDE, DEFAULT_TEMPERATURE_OVERRIDE
+        )
+        if resolve_param_inclusion(
+            model_config["supports_temperature"], temperature_override
+        ):
             api_kwargs["temperature"] = options.get(
                 CONF_TEMPERATURE, DEFAULT_TEMPERATURE
             )

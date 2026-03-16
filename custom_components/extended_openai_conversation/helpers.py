@@ -21,6 +21,8 @@ from .const import (
     DEFAULT_TOKEN_PARAM,
     MODEL_CONFIG_PATTERNS,
     MODEL_TOKEN_PARAMETER_SUPPORT,
+    PARAM_OVERRIDE_DISABLED,
+    PARAM_OVERRIDE_ENABLED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +47,15 @@ def get_model_config(model: str) -> dict[str, bool]:
 
     # Default configuration for standard models (gpt-4, gpt-4o, etc.)
     return DEFAULT_MODEL_CONFIG
+
+
+def resolve_param_inclusion(model_supports: bool, override: str) -> bool:
+    """Resolve whether to include a parameter given model support and user override."""
+    if override == PARAM_OVERRIDE_ENABLED:
+        return True
+    if override == PARAM_OVERRIDE_DISABLED:
+        return False
+    return model_supports  # "auto" defers to model detection
 
 
 def get_exposed_entities(hass: HomeAssistant) -> list[dict[str, Any]]:

@@ -93,6 +93,18 @@ CONF_TOP_P = "top_p"
 DEFAULT_TOP_P = 1
 CONF_TEMPERATURE = "temperature"
 DEFAULT_TEMPERATURE = 0.5
+CONF_TOP_P_OVERRIDE = "top_p_override"
+CONF_TEMPERATURE_OVERRIDE = "temperature_override"
+PARAM_OVERRIDE_AUTO = "auto"
+PARAM_OVERRIDE_ENABLED = "enabled"
+PARAM_OVERRIDE_DISABLED = "disabled"
+PARAM_OVERRIDE_OPTIONS = [
+    PARAM_OVERRIDE_AUTO,
+    PARAM_OVERRIDE_ENABLED,
+    PARAM_OVERRIDE_DISABLED,
+]
+DEFAULT_TOP_P_OVERRIDE = PARAM_OVERRIDE_AUTO
+DEFAULT_TEMPERATURE_OVERRIDE = PARAM_OVERRIDE_AUTO
 CONF_MAX_FUNCTION_CALLS_PER_CONVERSATION = "max_function_calls_per_conversation"
 DEFAULT_MAX_FUNCTION_CALLS_PER_CONVERSATION = 10
 CONF_SHORTEN_TOOL_CALL_ID = "shorten_tool_call_id"
@@ -280,6 +292,31 @@ MODEL_CONFIG_PATTERNS = [
             "supports_service_tier": True,
         },
     },
+    # Anthropic/Claude models (direct: claude-* and via LiteLLM: anthropic/*)
+    # Anthropic rejects requests with both top_p AND temperature simultaneously
+    {
+        "pattern": r"anthropic/|^claude-",
+        "config": {
+            "supports_top_p": False,
+            "supports_temperature": True,
+            "supports_max_tokens": True,
+            "supports_max_completion_tokens": False,
+            "supports_reasoning_effort": False,
+            "supports_service_tier": False,
+        },
+    },
+    # Google Gemini models (via LiteLLM: gemini/* or vertex_ai/gemini-*)
+    {
+        "pattern": r"gemini/|vertex_ai/gemini",
+        "config": {
+            "supports_top_p": False,
+            "supports_temperature": True,
+            "supports_max_tokens": True,
+            "supports_max_completion_tokens": False,
+            "supports_reasoning_effort": False,
+            "supports_service_tier": False,
+        },
+    },
 ]
 
 # AI Task default options (simpler than conversation - no prompt, just model/token settings)
@@ -287,6 +324,8 @@ DEFAULT_AI_TASK_OPTIONS = {
     CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
     CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
     CONF_ADVANCED_OPTIONS: DEFAULT_ADVANCED_OPTIONS,
+    CONF_TOP_P_OVERRIDE: DEFAULT_TOP_P_OVERRIDE,
+    CONF_TEMPERATURE_OVERRIDE: DEFAULT_TEMPERATURE_OVERRIDE,
 }
 
 # Skill System Constants

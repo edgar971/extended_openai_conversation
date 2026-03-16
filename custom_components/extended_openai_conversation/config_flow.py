@@ -52,7 +52,9 @@ from .const import (
     CONF_SKILLS,
     CONF_SKIP_AUTHENTICATION,
     CONF_TEMPERATURE,
+    CONF_TEMPERATURE_OVERRIDE,
     CONF_TOP_P,
+    CONF_TOP_P_OVERRIDE,
     CONTEXT_TRUNCATE_STRATEGIES,
     DEFAULT_ADVANCED_OPTIONS,
     DEFAULT_AI_TASK_NAME,
@@ -73,8 +75,12 @@ from .const import (
     DEFAULT_SHORTEN_TOOL_CALL_ID,
     DEFAULT_SKIP_AUTHENTICATION,
     DEFAULT_TEMPERATURE,
+    DEFAULT_TEMPERATURE_OVERRIDE,
     DEFAULT_TOP_P,
+    DEFAULT_TOP_P_OVERRIDE,
     DOMAIN,
+    PARAM_OVERRIDE_ENABLED,
+    PARAM_OVERRIDE_OPTIONS,
     REASONING_EFFORT_OPTIONS,
     SERVICE_TIER_OPTIONS,
 )
@@ -118,7 +124,9 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
         CONF_MAX_FUNCTION_CALLS_PER_CONVERSATION: DEFAULT_MAX_FUNCTION_CALLS_PER_CONVERSATION,
         CONF_TOP_P: DEFAULT_TOP_P,
+        CONF_TOP_P_OVERRIDE: DEFAULT_TOP_P_OVERRIDE,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+        CONF_TEMPERATURE_OVERRIDE: DEFAULT_TEMPERATURE_OVERRIDE,
         CONF_FUNCTION_TOOLS: DEFAULT_CONF_FUNCTION_TOOLS_STR,
         CONF_CONTEXT_THRESHOLD: DEFAULT_CONTEXT_THRESHOLD,
         CONF_CONTEXT_TRUNCATE_STRATEGY: DEFAULT_CONTEXT_TRUNCATE_STRATEGY,
@@ -322,23 +330,55 @@ class ExtendedOpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         schema: dict[Any, Any] = {}
 
-        # Add top_p if supported
-        if model_config["supports_top_p"]:
-            schema[
-                vol.Optional(
-                    CONF_TOP_P,
-                    default=DEFAULT_TOP_P,
+        # top_p override selector — always shown
+        schema[vol.Optional(CONF_TOP_P_OVERRIDE, default=DEFAULT_TOP_P_OVERRIDE)] = (
+            SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=opt, label=opt.capitalize())
+                        for opt in PARAM_OVERRIDE_OPTIONS
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
                 )
-            ] = NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05))
+            )
+        )
+        # top_p value slider — shown if model supports it OR user forced it enabled
+        current_top_p_override = self.options.get(
+            CONF_TOP_P_OVERRIDE, DEFAULT_TOP_P_OVERRIDE
+        )
+        if (
+            model_config["supports_top_p"]
+            or current_top_p_override == PARAM_OVERRIDE_ENABLED
+        ):
+            schema[vol.Optional(CONF_TOP_P, default=DEFAULT_TOP_P)] = NumberSelector(
+                NumberSelectorConfig(min=0, max=1, step=0.05)
+            )
 
-        # Add temperature if supported
-        if model_config["supports_temperature"]:
-            schema[
-                vol.Optional(
-                    CONF_TEMPERATURE,
-                    default=DEFAULT_TEMPERATURE,
-                )
-            ] = NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05))
+        # temperature override selector — always shown
+        schema[
+            vol.Optional(
+                CONF_TEMPERATURE_OVERRIDE, default=DEFAULT_TEMPERATURE_OVERRIDE
+            )
+        ] = SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value=opt, label=opt.capitalize())
+                    for opt in PARAM_OVERRIDE_OPTIONS
+                ],
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+        # temperature value slider — shown if model supports it OR user forced it enabled
+        current_temperature_override = self.options.get(
+            CONF_TEMPERATURE_OVERRIDE, DEFAULT_TEMPERATURE_OVERRIDE
+        )
+        if (
+            model_config["supports_temperature"]
+            or current_temperature_override == PARAM_OVERRIDE_ENABLED
+        ):
+            schema[vol.Optional(CONF_TEMPERATURE, default=DEFAULT_TEMPERATURE)] = (
+                NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05))
+            )
 
         # Add reasoning_effort if supported (o1, o3, o4, gpt-5 models)
         if model_config.get("supports_reasoning_effort"):
@@ -589,23 +629,55 @@ class ExtendedOpenAIAITaskSubentryFlowHandler(ConfigSubentryFlow):
 
         schema: dict[Any, Any] = {}
 
-        # Add top_p if supported
-        if model_config["supports_top_p"]:
-            schema[
-                vol.Optional(
-                    CONF_TOP_P,
-                    default=DEFAULT_TOP_P,
+        # top_p override selector — always shown
+        schema[vol.Optional(CONF_TOP_P_OVERRIDE, default=DEFAULT_TOP_P_OVERRIDE)] = (
+            SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=opt, label=opt.capitalize())
+                        for opt in PARAM_OVERRIDE_OPTIONS
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
                 )
-            ] = NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05))
+            )
+        )
+        # top_p value slider — shown if model supports it OR user forced it enabled
+        current_top_p_override = self.options.get(
+            CONF_TOP_P_OVERRIDE, DEFAULT_TOP_P_OVERRIDE
+        )
+        if (
+            model_config["supports_top_p"]
+            or current_top_p_override == PARAM_OVERRIDE_ENABLED
+        ):
+            schema[vol.Optional(CONF_TOP_P, default=DEFAULT_TOP_P)] = NumberSelector(
+                NumberSelectorConfig(min=0, max=1, step=0.05)
+            )
 
-        # Add temperature if supported
-        if model_config["supports_temperature"]:
-            schema[
-                vol.Optional(
-                    CONF_TEMPERATURE,
-                    default=DEFAULT_TEMPERATURE,
-                )
-            ] = NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05))
+        # temperature override selector — always shown
+        schema[
+            vol.Optional(
+                CONF_TEMPERATURE_OVERRIDE, default=DEFAULT_TEMPERATURE_OVERRIDE
+            )
+        ] = SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value=opt, label=opt.capitalize())
+                    for opt in PARAM_OVERRIDE_OPTIONS
+                ],
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+        # temperature value slider — shown if model supports it OR user forced it enabled
+        current_temperature_override = self.options.get(
+            CONF_TEMPERATURE_OVERRIDE, DEFAULT_TEMPERATURE_OVERRIDE
+        )
+        if (
+            model_config["supports_temperature"]
+            or current_temperature_override == PARAM_OVERRIDE_ENABLED
+        ):
+            schema[vol.Optional(CONF_TEMPERATURE, default=DEFAULT_TEMPERATURE)] = (
+                NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05))
+            )
 
         # Add reasoning_effort if supported (o1, o3, o4, gpt-5 models)
         if model_config.get("supports_reasoning_effort"):
